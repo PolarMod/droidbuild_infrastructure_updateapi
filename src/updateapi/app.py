@@ -1,6 +1,8 @@
+import os
+
 from flask import Flask, request
 
-from updateapi.util import todo
+from updateapi.util import todo, check_keys_in_dict
 from updateapi.util.api import ok, error
 from updateapi.util.auth import check_authentication
 from updateapi.config import config
@@ -8,19 +10,50 @@ from updateapi.db.models import Package, Device, Token
 
 api_prefix = config.get("api.prefix")
 upload_dir = config.get("storage.uploads.dir")
+mod_name = config.get("meta.modname")
 app = Flask(__name__)
 app.secret_key = config.get("api.secrets.secret_key")
 
 @app.route(api_prefix + "/<str:device>/<str:flavour>/packages", methods=["GET", "PUT"])
 def packages_by_device_flavour(device: str, flavour: str):
-    if request.method == "GET":
-         packages = Deivce.objects(__raw__=dict(codename=device,
+    packages = Deivce.objects(__raw__=dict(codename=device,
                                                 packages=dict(
                                                     build_flavour=flavour,
                                                     ),
                                                 ))
-         if len(packages) == 0:
-             return error("device_or_flavour_not_found", 404)
+    if len(packages) == 0:
+        return error("device_or_flavour_not_found", 404)
+    if request.method == "GET":
+         return ok(dict(packages=packages))
+     elif request.method == "PUT":
+        data = str(request.files['request'].read(), 'utf-8')
+        try:
+            data = json.loads(data)
+        except:
+            return error("bad_format", 400)
+        if "token" not in data:
+            return error("unauthorized", 401)
+        if not check_authentication(data["token"]):
+            return error("unauthorized", 401)
+        if not check_keys_in_dict(["version",
+                                   "incremental_version",
+                                   "datetime", "package_type",
+                                   "raw_filetype"], data):
+            return error("bad_fields", 400)
+        file_ = request.files['package']
+        device_path = os.path.join(upload_dir, device)
+        if not os.path.commonprefix(upload_dir, device_path) != upload_dir:
+            return error("bad_path", 400)
+        if not os.path.isdir(device_path):
+            os.mkdir(device_path)
+        filetype = data["raw_filetype"]
+        version = data["version"]
+        incremental_version = data["incremental_version"]
+        filename = f"{mod_name}-{package_type}-{version}-{incremental_version}.{filetype}"
+        upload_path = os.path.join(device_path, filename)
+        if not os.path.commonprefix(device_path, upload_path) != device_path:
+            return error("bad_fields", 400)
+        file_.save(upload_path)
 
 
 @app.route(api_prefix + "/devices", methods=["GET", "PUT"])
@@ -46,7 +79,7 @@ def devices():
             return error("unauthorized", 401)
         if "object" not in data:
             return error("no_object")
-        if not check_in_list(["name", "codename"], list(obj.keys())):
+        if not check_keys_in_dict(["name", "codename"], obj):
             return error("bad_fields")
         name = obj["name"]
         codename = obj["codename"]
