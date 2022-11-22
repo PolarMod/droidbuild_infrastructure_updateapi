@@ -1,0 +1,11 @@
+# Config which is intended for usage with pytest in docer
+---
+api:
+  prefix: "/api"
+  secrets:
+    secret_key: "test_key"
+storage:
+  uploads:
+    dir: "/opt/updateapi/uploads/"
+meta:
+  modname: "TestMod"

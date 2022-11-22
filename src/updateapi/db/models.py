@@ -21,5 +21,5 @@ class Device(Document):
 
 class Token(Document):
     secret = StringField(required=True)
-    expire = LongField(required=True())
+    expire = LongField(required=True)
 

@@ -1,3 +1,5 @@
-config/secrets.yaml
+config/production.yaml
+*.pyc
+__pycache__
 *.swp
 .DS_Store

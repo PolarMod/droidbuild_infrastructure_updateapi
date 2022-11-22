@@ -1,4 +1,5 @@
 import os
+import json
 
 from flask import Flask, request
 
@@ -16,7 +17,7 @@ app.secret_key = config.get("api.secrets.secret_key")
 
 @app.route(api_prefix + "/<str:device>/<str:flavour>/packages", methods=["GET", "PUT"])
 def packages_by_device_flavour(device: str, flavour: str):
-    packages = Deivce.objects(__raw__=dict(codename=device,
+    packages = Device.objects(__raw__=dict(codename=device,
                                                 packages=dict(
                                                     build_flavour=flavour,
                                                     ),
@@ -24,8 +25,8 @@ def packages_by_device_flavour(device: str, flavour: str):
     if len(packages) == 0:
         return error("device_or_flavour_not_found", 404)
     if request.method == "GET":
-         return ok(dict(packages=packages))
-     elif request.method == "PUT":
+        return ok(dict(packages=packages))
+    elif request.method == "PUT":
         data = str(request.files['request'].read(), 'utf-8')
         try:
             data = json.loads(data)
@@ -42,16 +43,17 @@ def packages_by_device_flavour(device: str, flavour: str):
             return error("bad_fields", 400)
         file_ = request.files['package']
         device_path = os.path.join(upload_dir, device)
-        if not os.path.commonprefix(upload_dir, device_path) != upload_dir:
+        if not os.path.commonprefix([upload_dir, device_path]) != upload_dir:
             return error("bad_path", 400)
         if not os.path.isdir(device_path):
             os.mkdir(device_path)
         filetype = data["raw_filetype"]
         version = data["version"]
         incremental_version = data["incremental_version"]
+        package_type = data["package_type"]
         filename = f"{mod_name}-{package_type}-{version}-{incremental_version}.{filetype}"
         upload_path = os.path.join(device_path, filename)
-        if not os.path.commonprefix(device_path, upload_path) != device_path:
+        if not os.path.commonprefix([device_path, upload_path]) != device_path:
             return error("bad_fields", 400)
         file_.save(upload_path)
 
@@ -79,11 +81,12 @@ def devices():
             return error("unauthorized", 401)
         if "object" not in data:
             return error("no_object")
+        obj = data["object"]
         if not check_keys_in_dict(["name", "codename"], obj):
             return error("bad_fields")
         name = obj["name"]
         codename = obj["codename"]
-        if len(Devices.objects(name=name)) != 0:
+        if len(Device.objects(name=name)) != 0:
             return error("already_exists", 409)
         Device(name=name, codename=codename, n_packages=0, packages=list()).save()
         return ok(status_code=201)

@@ -1,6 +1,6 @@
 import datetime
 
-from updateapi.util.auth import Token
+from updateapi.db.models import Token
 
 def check_authentication(token: str) -> bool:
     """
@@ -12,7 +12,7 @@ def check_authentication(token: str) -> bool:
 
      :return: bool: whether token is valid
     """
-    tokens = Tokens.objects(secret=token)
+    tokens = Token.objects(secret=token)
     if len(tokens) == 0:
         return False
     assert len(tokens) == 1, "Duplicating tokens found"
