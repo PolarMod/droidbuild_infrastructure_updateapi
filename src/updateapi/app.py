@@ -15,7 +15,7 @@ mod_name = config.get("meta.modname")
 app = Flask(__name__)
 app.secret_key = config.get("api.secrets.secret_key")
 
-@app.route(api_prefix + "/<str:device>/<str:flavour>/packages", methods=["GET", "PUT"])
+@app.route(api_prefix + "/<device>/<flavour>/packages", methods=["GET", "PUT"])
 def packages_by_device_flavour(device: str, flavour: str):
     packages = Device.objects(__raw__=dict(codename=device,
                                                 packages=dict(

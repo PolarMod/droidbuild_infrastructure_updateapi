@@ -1,4 +1,4 @@
-# Config which is intended for usage with pytest in docer
+# Config which is intended for usage with pytest in docker
 ---
 api:
   prefix: "/api"
@@ -7,5 +7,7 @@ api:
 storage:
   uploads:
     dir: "/opt/updateapi/uploads/"
+db:
+  mongo_uri: "localhost:27017"
 meta:
   modname: "TestMod"
