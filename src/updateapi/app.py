@@ -17,7 +17,7 @@ app.secret_key = config.get("api.secrets.secret_key")
 
 @app.route(api_prefix + "/<device>/<flavour>/packages", methods=["GET", "PUT"])
 def packages_by_device_flavour(device: str, flavour: str):
-    packages = Device.objects(__raw__=dict(codename=device,
+    packages = Device.objects(__raw__=dict(codename=device, #pylint:disable=no-member
                                                 packages=dict(
                                                     build_flavour=flavour,
                                                     ),
@@ -64,7 +64,7 @@ def devices():
         # For speed up we would not send all packages with
         # a device
         short_devices = list()
-        for device in Device.objects():
+        for device in Device.objects(): #pylint: disable=no-member
             short_devices.append(dict(
                 name=device.name,
                 codename=device.codename,
@@ -86,7 +86,7 @@ def devices():
             return error("bad_fields")
         name = obj["name"]
         codename = obj["codename"]
-        if len(Device.objects(name=name)) != 0:
+        if len(Device.objects(name=name)) != 0: #pylint: disable=no-member
             return error("already_exists", 409)
         Device(name=name, codename=codename, n_packages=0, packages=list()).save()
         return ok(status_code=201)
