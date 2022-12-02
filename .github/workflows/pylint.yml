@@ -10,9 +10,6 @@ jobs:
           image: mongo
           ports:
             - 27017:27017
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -30,7 +27,7 @@ jobs:
     - name: Analysing the code with pylint
       run: |
         pylint -E $(git ls-files '*.py')
-    - name: test
+    - name: Test with pytest
       run: |
         cd src
         export UPDATEAPI_CONFIG=../config/test.yaml
