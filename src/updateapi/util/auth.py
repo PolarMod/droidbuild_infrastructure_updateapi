@@ -12,7 +12,7 @@ def check_authentication(token: str) -> bool:
 
      :return: bool: whether token is valid
     """
-    tokens = Token.objects(secret=token)
+    tokens = Token.objects(secret=token) #pylint:disable=no-member
     if len(tokens) == 0:
         return False
     assert len(tokens) == 1, "Duplicating tokens found"
